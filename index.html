@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Birthday Greeting</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+      font-family: 'Arial', sans-serif;
+      color: pink;
+    }
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.8);
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+    }
+    #overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .buttons {
+      display: flex;
+      gap: 20px;
+    }
+    .btn {
+      padding: 12px 24px;
+      background: pink;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: black;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="overlay">
+    <h1 id="message">seem's like familiar right?</h1>
+    <div class="buttons">
+      <button class="btn" id="next">NEXT</button>
+      <button class="btn" id="stop">STOP</button>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const image = new Image();
+    image.src = "assets/background.jpg";
+
+    let particles = [];
+    let imageData;
+    let loaded = false;
+    let width, height;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    image.onload = () => {
+      ctx.drawImage(image, 0, 0, width, height);
+      imageData = ctx.getImageData(0, 0, width, height);
+      createParticles();
+      ctx.clearRect(0, 0, width, height);
+      animate();
+    };
+
+    function createParticles() {
+      for (let y = 0; y < height; y += 4) {
+        for (let x = 0; x < width; x += 4) {
+          const i = (y * width + x) * 4;
+          const r = imageData.data[i];
+          const g = imageData.data[i + 1];
+          const b = imageData.data[i + 2];
+          const a = imageData.data[i + 3];
+
+          if (a > 100) {
+            const fromTop = { x: x, y: 0, tx: x, ty: y, color: `rgb(${r},${g},${b})`, vy: 0 };
+            const fromBottom = { x: x, y: height, tx: x, ty: y, color: `rgb(${r},${g},${b})`, vy: 0 };
+            particles.push(Math.random() > 0.5 ? fromTop : fromBottom);
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      let complete = 0;
+
+      for (let p of particles) {
+        const dx = p.tx - p.x;
+        const dy = p.ty - p.y;
+        p.x += dx * 0.05;
+        p.y += dy * 0.05;
+
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+          complete++;
+        }
+
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 2, 2);
+      }
+
+      if (complete < particles.length) {
+        requestAnimationFrame(animate);
+      } else {
+        document.getElementById("overlay").classList.add("visible");
+      }
+    }
+
+    const nextBtn = document.getElementById("next");
+    const stopBtn = document.getElementById("stop");
+    const messageBox = document.getElementById("message");
+
+    const messages = [
+      "HAPPY BIRTHDAY JASMINE NABILA.",
+      "WHAT I WISH IS ALWAYS",
+      "THE BEST FOR YOU",
+      "I KNOW YOU HAVE STRUGGLE YEARS THIS YEARS",
+      "BUT",
+      "I ALSO KNOW YOU'RE STRONG GRIL",
+      "I HOPE EVERYTHING THE BEST WILL BRING'S TO YOU",
+      "I WISH",
+      "YOUR DREAMS",
+      "CAREER",
+      "STUDY",
+      "RELATIONSHIP",
+      "WILL PROVE BY DESERVED",
+      "IM SORRY IF I DO THE SAME FAULT",
+      "OUR REALITONSHIP IS JUST LIKE A SEASON",
+      "BUT I DONT EXPECT THAT'LL PASS SO FAST",
+      "AND",
+      "I JUST WANT TO TELL YOU",
+      "NO MATTER HOW MUCH",
+      "YOU PLAY WITH MY FEELINGS",
+      "NO MATTER HOW MUCH I FEEL THE PAIN",
+      "I WILL STILL STAND WHILE I CAN STAND",
+      "I HOPE, IM NOT A WORST CHAPTER",
+      "OF YOUR JOURNEY",
+      "BUT",
+      "IF THAT'S TRUE",
+      "IM SORRY",
+      "BUT YOU",
+      "ARE THE",
+      "BEST CHAPTER",
+      "OF MY STORY",
+      "AT LEAST",
+      "FOR NOW",
+      "JASMINE",
+      "IT WILL END",
+      "WHEN ITS DONE",
+      "MAYBE THIS IS",
+      "MY LAST BIRTHDAY WISHES FOR YOU",
+      "DONT WORRY",
+      "WE WILL GET USED TO IT",
+      "THANK YOU FOR EVERYTHING YOU'VE DONE",
+      "END"
+    ];
+
+    let index = 0;
+
+    nextBtn.addEventListener("click", () => {
+      if (index < messages.length) {
+        messageBox.innerText = messages[index];
+        index++;
+      }
+    });
+
+    stopBtn.addEventListener("mouseenter", moveStopButton);
+    stopBtn.addEventListener("touchstart", moveStopButton);
+
+    function moveStopButton(e) {
+      const x = Math.random() * (window.innerWidth - 100);
+      const y = Math.random() * (window.innerHeight - 50);
+      stopBtn.style.position = "absolute";
+      stopBtn.style.left = `${x}px`;
+      stopBtn.style.top = `${y}px`;
+    }
+  </script>
+</body>
+</html>
